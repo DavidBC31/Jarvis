@@ -31,7 +31,20 @@ frontend/  SPA React + TS + Vite + Tailwind (header/logo, grille 16:9, footer, p
 docs/      Spécifications techniques et contrats de données
 ```
 
-## Démarrage rapide (dev)
+## Démarrage rapide
+
+### Option 1 — Docker (recommandé, rien à installer d'autre)
+
+Avec **Docker Desktop** installé, depuis la racine du projet :
+
+```bash
+docker compose up --build
+```
+
+➡️ Ouvre **http://localhost:8000** · admin sur **http://localhost:8000/#admin**
+(Ctrl+C pour arrêter). Aucune dépendance Python/Node à gérer.
+
+### Option 2 — Script natif
 
 **En une commande** (build le frontend si Node est présent, puis démarre l'agrégateur) :
 

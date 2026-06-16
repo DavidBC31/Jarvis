@@ -1,0 +1,15 @@
+# Lancement de Jarvis en une commande :  docker compose up --build
+# Puis ouvrir http://localhost:8000  (admin : http://localhost:8000/#admin)
+services:
+  jarvis:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Optionnels — laissés vides par défaut (le dashboard tourne sans).
+      # RAG via Claude (sinon mode "stub" hors-ligne) :
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Tickets Everping réels (sinon échantillon anonymisé) :
+      EVERPING_REFRESH_TOKEN: ${EVERPING_REFRESH_TOKEN:-}
+      EVERPING_CLIENT_ID: ${EVERPING_CLIENT_ID:-}
+    restart: unless-stopped
