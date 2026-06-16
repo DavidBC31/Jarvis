@@ -33,6 +33,18 @@ docs/      Spécifications techniques et contrats de données
 
 ## Démarrage rapide (dev)
 
+**En une commande** (build le frontend si Node est présent, puis démarre l'agrégateur) :
+
+```bash
+./run.sh
+```
+
+➡️ Interface sur **http://localhost:8000** · admin projets sur **http://localhost:8000/#admin**
+
+Prérequis : Python 3.11+ (obligatoire) et Node 18+ (pour builder l'interface).
+
+<details><summary>Démarrage manuel / mode développement (rechargement à chaud)</summary>
+
 **Backend** (port 8000) :
 
 ```bash
@@ -52,6 +64,8 @@ npm run dev      # http://localhost:5173
 
 En production, `npm run build` génère `frontend/dist`, servi directement par l'agrégateur
 (la SPA est alors disponible sur le port du backend).
+
+</details>
 
 ### État d'avancement (brique 1 — socle)
 
