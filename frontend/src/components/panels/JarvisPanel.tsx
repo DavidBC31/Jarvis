@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Panel } from "../Panel";
 import { useDashboard } from "../../store";
+import { useVoice } from "../../hooks/useVoice";
 import type { RagPhase } from "../../types";
 
 const PHASE_LABEL: Record<RagPhase, string> = {
@@ -13,27 +14,48 @@ const PHASE_LABEL: Record<RagPhase, string> = {
 export function JarvisPanel() {
   const rag = useDashboard((s) => s.rag);
   const [input, setInput] = useState("");
-  const busy = rag.phase !== "idle";
+  const [muted, setMuted] = useState(false);
+  const voice = useVoice("fr-FR");
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
 
-  const ask = async () => {
-    const q = input.trim();
+  const busy = rag.phase === "thinking" || rag.phase === "speaking";
+  // Phase effective : la reconnaissance vocale est locale, le reste vient du serveur.
+  const phase: RagPhase = voice.listening ? "listening" : rag.phase;
+
+  const submit = async (question: string) => {
+    const q = question.trim();
     if (!q || busy) return;
     setInput("");
     try {
-      await fetch("/api/rag/ask", {
+      const res = await fetch("/api/rag/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
       });
+      const body = (await res.json()) as { answer?: string };
+      if (body.answer && !mutedRef.current) voice.speak(body.answer);
     } catch {
-      /* l'UI est pilotée par les rag.event du WebSocket */
+      /* l'UI reste pilotée par les rag.event du WebSocket */
     }
+  };
+
+  const onMic = () => {
+    if (voice.listening) {
+      voice.stopListening();
+      return;
+    }
+    voice.cancelSpeak();
+    voice.startListening((transcript) => {
+      setInput(transcript);
+      void submit(transcript);
+    });
   };
 
   return (
     <Panel title="JARVIS — KNOWLEDGE RAG ASSISTANT" subtitle="VOCAL & CONTEXTUEL">
       <div className="flex gap-4 h-full">
-        <Orb phase={rag.phase} />
+        <Orb phase={phase} />
         <div className="flex-1 min-w-0 flex flex-col gap-2 text-xs">
           <div className="space-y-2 overflow-auto">
             <p>
@@ -53,17 +75,38 @@ export function JarvisPanel() {
 
           <div className="mt-auto flex flex-col gap-2">
             <div className="flex items-center gap-3 text-[10px] text-text-muted">
-              <span title="Micro (à venir)">🎙️ MIC</span>
+              <button
+                type="button"
+                onClick={onMic}
+                disabled={!voice.sttSupported || busy}
+                title={voice.sttSupported ? "Parler à Jarvis" : "Reconnaissance vocale indisponible"}
+                className="disabled:opacity-40"
+                style={{ color: voice.listening ? "var(--neon-cyan)" : undefined }}
+              >
+                🎙️ {voice.listening ? "ÉCOUTE…" : "MIC"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMuted((m) => !m);
+                  if (!muted) voice.cancelSpeak();
+                }}
+                disabled={!voice.ttsSupported}
+                title={muted ? "Réactiver la voix" : "Couper la voix"}
+                className="disabled:opacity-40"
+              >
+                {muted ? "🔇" : "🔊"}
+              </button>
               <span title="Base de documents">🗄️ BDD</span>
               <span className="ml-auto tracking-widest" style={{ color: "var(--neon-cyan)" }}>
-                {PHASE_LABEL[rag.phase]}
+                {PHASE_LABEL[phase]}
               </span>
             </div>
 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void ask();
+                void submit(input);
               }}
               className="flex gap-2"
             >
@@ -101,16 +144,17 @@ export function JarvisPanel() {
 
 function Orb({ phase }: { phase: RagPhase }) {
   // Vitesse de pulsation indexée sur la phase (visualiseur audio à venir).
-  const duration = phase === "speaking" ? "0.8s" : phase === "thinking" ? "1.4s" : "3s";
+  const duration =
+    phase === "speaking" ? "0.8s" : phase === "listening" ? "0.6s" : phase === "thinking" ? "1.4s" : "3s";
+  const color = phase === "listening" ? "var(--status-new, #38bdf8)" : "var(--neon-cyan)";
   return (
     <div
       className="shrink-0 self-center rounded-full"
       style={{
         width: 110,
         height: 110,
-        background:
-          "radial-gradient(circle at 50% 45%, var(--neon-cyan) 0%, var(--neon-cyan-dim) 35%, transparent 70%)",
-        boxShadow: "0 0 30px var(--neon-cyan)",
+        background: `radial-gradient(circle at 50% 45%, ${color} 0%, var(--neon-cyan-dim) 35%, transparent 70%)`,
+        boxShadow: `0 0 30px ${color}`,
         animation: `pulse-glow ${duration} ease-in-out infinite`,
       }}
     />
