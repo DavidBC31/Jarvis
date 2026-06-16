@@ -2,9 +2,9 @@ import { Logo } from "./Logo";
 import { useDashboard } from "../store";
 
 const STATUS_LABEL: Record<string, string> = {
-  connecting: "CONNECTING…",
-  online: "ONLINE",
-  reconnecting: "RECONNECTING…",
+  connecting: "CONNEXION…",
+  online: "EN LIGNE",
+  reconnecting: "RECONNEXION…",
 };
 
 export function Header() {

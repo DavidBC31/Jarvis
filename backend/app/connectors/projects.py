@@ -32,14 +32,15 @@ _last_good: list[dict] | None = None  # dernier jeu de projets normalisé valide
 class ProjectInput(BaseModel):
     """Forme éditée à la main / reçue par l'API (champs minimaux)."""
 
-    id: str = Field(min_length=1)
-    name: str = Field(min_length=1)
-    dueDate: str  # ISO date "YYYY-MM-DD"
-    keyStatus: KeyStatus
-    progress: int = Field(ge=0, le=100)
+    id: str = Field(min_length=1)  # matricule (ex. SI-PRO3)
+    name: str = Field(min_length=1)  # intitulé du projet
+    owner: str = ""  # responsable
+    dueDate: str | None = None  # ISO date "YYYY-MM-DD" (optionnel)
+    keyStatus: KeyStatus = "on_track"
+    progress: int = Field(default=0, ge=0, le=100)
 
-    def parsed_due(self) -> date:
-        return date.fromisoformat(self.dueDate)
+    def parsed_due(self) -> date | None:
+        return date.fromisoformat(self.dueDate) if self.dueDate else None
 
 
 class ProjectsPayload(BaseModel):
@@ -57,18 +58,20 @@ def _normalize(items: list[ProjectInput]) -> list[dict]:
     projects = []
     for p in items:
         due = p.parsed_due()  # lève ValueError si format invalide
-        overdue = due < today and p.progress < 100
+        overdue = bool(due and due < today and p.progress < 100)
         projects.append(
             {
                 "id": p.id,
                 "name": p.name,
+                "owner": p.owner,
                 "dueDate": p.dueDate,
                 "keyStatus": p.keyStatus,
                 "progress": p.progress,
                 "overdue": overdue,
             }
         )
-    projects.sort(key=lambda x: (_PRIORITY[x["keyStatus"]], x["dueDate"]))
+    # Tri : priorité (critique d'abord) puis échéance (sans date en dernier).
+    projects.sort(key=lambda x: (_PRIORITY[x["keyStatus"]], x["dueDate"] or "9999-12-31"))
     return projects
 
 

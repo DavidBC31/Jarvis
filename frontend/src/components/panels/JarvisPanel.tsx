@@ -5,10 +5,10 @@ import { useVoice } from "../../hooks/useVoice";
 import type { RagPhase } from "../../types";
 
 const PHASE_LABEL: Record<RagPhase, string> = {
-  idle: "READY",
-  listening: "LISTENING…",
-  thinking: "CONSULTING DB…",
-  speaking: "RESPONDING…",
+  idle: "PRÊT",
+  listening: "ÉCOUTE…",
+  thinking: "CONSULTATION BDD…",
+  speaking: "RÉPONSE…",
 };
 
 export function JarvisPanel() {
@@ -53,7 +53,7 @@ export function JarvisPanel() {
   };
 
   return (
-    <Panel title="JARVIS — KNOWLEDGE RAG ASSISTANT" subtitle="VOCAL & CONTEXTUEL">
+    <Panel title="JARVIS — ASSISTANT RAG" subtitle="VOCAL & CONTEXTUEL">
       <div className="flex gap-4 h-full">
         <Orb phase={phase} />
         <div className="flex-1 min-w-0 flex flex-col gap-2 text-xs">
@@ -65,7 +65,7 @@ export function JarvisPanel() {
             {rag.answer && (
               <p>
                 <span className="neon-text font-display tracking-wider">
-                  JARVIS (RAG knowledge base) :
+                  JARVIS (base documentaire) :
                 </span>{" "}
                 {rag.answer}
                 {rag.phase === "speaking" && <span className="animate-pulse">▌</span>}
@@ -130,7 +130,7 @@ export function JarvisPanel() {
             {rag.context && (
               <div className="neon-border rounded p-2 text-[11px]">
                 <div className="text-text-muted tracking-widest text-[9px]">
-                  CURRENT DOCUMENT CONTEXT
+                  CONTEXTE DOCUMENTAIRE
                 </div>
                 {rag.context.equipment} / {rag.context.procedure}
               </div>

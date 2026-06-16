@@ -85,15 +85,15 @@ def seed_footer() -> dict:
     return {
         **_meta(),
         "globalStatus": {
-            "label": "ALL CRITICAL SERVICES OPERATIONAL",
+            "label": "TOUS LES SERVICES CRITIQUES OPÉRATIONNELS",
             "healthy": healthy,
             "uptimePercent": 98.5,
         },
         "macStudio": read_system_metrics(),
         "activityStream": [
-            {"id": "act-1", "at": _now_iso(), "label": "Service Alert VPN",
+            {"id": "act-1", "at": _now_iso(), "label": "Alerte service VPN",
              "severity": "warn"},
-            {"id": "act-2", "at": _now_iso(), "label": "Ticket EVP-10293 assigné",
+            {"id": "act-2", "at": _now_iso(), "label": "Supervision active",
              "severity": "info"},
         ],
     }
@@ -123,8 +123,8 @@ def _recompute_footer_health() -> None:
     gs = STATE["footer"]["globalStatus"]
     gs["healthy"] = healthy
     gs["label"] = (
-        "ALL CRITICAL SERVICES OPERATIONAL" if healthy
-        else "SERVICE DISRUPTION DETECTED"
+        "TOUS LES SERVICES CRITIQUES OPÉRATIONNELS" if healthy
+        else "INCIDENT DE SERVICE DÉTECTÉ"
     )
 
 

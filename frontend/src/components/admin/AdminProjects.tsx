@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import type { KeyStatus, Project } from "../../types";
 
 // Ligne éditable : mêmes champs que ProjectInput côté backend (overdue est calculé).
-type Row = Pick<Project, "id" | "name" | "dueDate" | "keyStatus" | "progress">;
+type Row = Pick<Project, "id" | "name" | "owner" | "dueDate" | "keyStatus" | "progress">;
 
 const KEY_STATUS: KeyStatus[] = ["on_track", "at_risk", "critical"];
 const KEY_LABEL: Record<KeyStatus, string> = {
-  on_track: "On Track",
-  at_risk: "At Risk",
-  critical: "Critical",
+  on_track: "Sur les rails",
+  at_risk: "À risque",
+  critical: "Critique",
 };
 
 const emptyRow = (): Row => ({
   id: "",
   name: "",
-  dueDate: new Date().toISOString().slice(0, 10),
+  owner: "",
+  dueDate: "",
   keyStatus: "on_track",
   progress: 0,
 });
@@ -50,6 +51,7 @@ export function AdminProjects() {
         (d.panel?.projects ?? rows).map((p: Project) => ({
           id: p.id,
           name: p.name,
+          owner: p.owner,
           dueDate: p.dueDate,
           keyStatus: p.keyStatus,
           progress: p.progress,
@@ -66,10 +68,10 @@ export function AdminProjects() {
     <div className="h-full w-full p-6 overflow-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-xl tracking-[0.25em] neon-text">
-          ADMIN · PROJETS
+          ADMIN · PROJETS SI
         </h1>
         <a href="#" className="text-xs tracking-widest text-neon-cyan">
-          ← DASHBOARD
+          ← TABLEAU DE BORD
         </a>
       </div>
 
@@ -80,8 +82,9 @@ export function AdminProjects() {
           <table className="w-full text-sm border-collapse">
             <thead className="text-text-muted text-left text-xs">
               <tr>
-                <th className="py-2 pr-2">ID</th>
-                <th className="py-2 pr-2">Nom</th>
+                <th className="py-2 pr-2">Matricule</th>
+                <th className="py-2 pr-2">Intitulé</th>
+                <th className="py-2 pr-2">Responsable</th>
                 <th className="py-2 pr-2">Échéance</th>
                 <th className="py-2 pr-2">Statut</th>
                 <th className="py-2 pr-2">Avancement</th>
@@ -107,10 +110,17 @@ export function AdminProjects() {
                   </td>
                   <td className="py-1 pr-2">
                     <input
+                      className="bg-transparent neon-border rounded px-2 py-1 w-40"
+                      value={r.owner}
+                      onChange={(e) => update(i, { owner: e.target.value })}
+                    />
+                  </td>
+                  <td className="py-1 pr-2">
+                    <input
                       type="date"
                       className="bg-transparent neon-border rounded px-2 py-1"
-                      value={r.dueDate}
-                      onChange={(e) => update(i, { dueDate: e.target.value })}
+                      value={r.dueDate ?? ""}
+                      onChange={(e) => update(i, { dueDate: e.target.value || null })}
                     />
                   </td>
                   <td className="py-1 pr-2">

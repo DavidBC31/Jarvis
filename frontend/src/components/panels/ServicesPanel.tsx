@@ -8,62 +8,47 @@ const STATE_COLOR: Record<ServiceState, string> = {
   alert: "var(--status-alert)",
   maint: "#ff9a3a",
 };
+const STATE_LABEL: Record<ServiceState, string> = {
+  ok: "Opérationnel",
+  warn: "Dégradé",
+  alert: "Hors ligne",
+  maint: "Maintenance",
+};
 
-// Projection isométrique simplifiée d'une grille (x, y) → (px, py).
-function iso(x: number, y: number) {
-  const tile = 60;
-  const ox = 150;
-  const oy = 30;
-  return { px: ox + (x - y) * tile, py: oy + (x + y) * (tile / 2) };
-}
+const BEATS_SHOWN = 30;
 
 export function ServicesPanel() {
   const panel = useDashboard((s) => s.state?.services);
+  const up = panel?.upCount ?? 0;
+  const total = panel?.total ?? panel?.nodes.length ?? 0;
+  const allUp = total > 0 && up === total;
+
   return (
-    <Panel
-      title="SYSTEM & SERVICE STATUS"
-      subtitle="LIVE NETWORK MAP"
-      stale={panel?.stale}
-      className="row-span-1"
-    >
+    <Panel title="ÉTAT DES SERVICES" subtitle="SUPERVISION TEMPS RÉEL" stale={panel?.stale}>
       {!panel ? (
         <div className="text-text-muted text-xs">Chargement…</div>
       ) : (
-        <div className="flex gap-3 h-full">
-          <svg viewBox="0 0 320 230" className="flex-1 min-w-0">
-            {panel.links.map((l, i) => {
-              const a = panel.nodes.find((n) => n.id === l.from);
-              const b = panel.nodes.find((n) => n.id === l.to);
-              if (!a || !b) return null;
-              const pa = iso(a.x ?? 0, a.y ?? 0);
-              const pb = iso(b.x ?? 0, b.y ?? 0);
-              return (
-                <line
-                  key={i}
-                  x1={pa.px}
-                  y1={pa.py}
-                  x2={pb.px}
-                  y2={pb.py}
-                  stroke="var(--neon-cyan)"
-                  strokeWidth="1"
-                  opacity="0.3"
-                />
-              );
-            })}
+        <div className="h-full flex flex-col">
+          <div className="flex items-center gap-2 text-[11px] mb-2 shrink-0">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: allUp ? "var(--status-ok)" : "var(--status-alert)",
+                boxShadow: `0 0 6px ${allUp ? "var(--status-ok)" : "var(--status-alert)"}`,
+              }}
+            />
+            <span className="font-display tracking-widest">
+              {allUp ? "TOUS LES SERVICES OPÉRATIONNELS" : "INCIDENT EN COURS"}
+            </span>
+            <span className="ml-auto text-text-muted tabular-nums">
+              {up}/{total} en ligne
+            </span>
+          </div>
+
+          <ul className="flex-1 min-h-0 overflow-auto divide-y divide-white/5 pr-1">
             {panel.nodes.map((n) => (
-              <Node key={n.id} node={n} />
+              <ServiceRow key={n.id} node={n} />
             ))}
-          </svg>
-          <ul className="w-40 shrink-0 text-[11px] space-y-1 self-center">
-            {panel.summary.length === 0 ? (
-              <li style={{ color: "var(--status-ok)" }}>All systems nominal.</li>
-            ) : (
-              panel.summary.map((line, i) => (
-                <li key={i} className="leading-tight">
-                  {line}
-                </li>
-              ))
-            )}
           </ul>
         </div>
       )}
@@ -71,32 +56,49 @@ export function ServicesPanel() {
   );
 }
 
-function Node({ node }: { node: ServiceNode }) {
-  const { px, py } = iso(node.x ?? 0, node.y ?? 0);
+function ServiceRow({ node }: { node: ServiceNode }) {
   const color = STATE_COLOR[node.state];
-  const pulse = node.state !== "ok";
+  const beats = node.beats ?? [];
+  // Aligne les barres à droite (les plus récentes à droite), comble à gauche.
+  const padded: (ServiceState | null)[] = [
+    ...Array(Math.max(0, BEATS_SHOWN - beats.length)).fill(null),
+    ...beats.slice(-BEATS_SHOWN),
+  ];
+
   return (
-    <g>
-      <rect
-        x={px - 18}
-        y={py - 12}
-        width="36"
-        height="24"
-        rx="3"
-        fill="#0a1828"
-        stroke="var(--neon-cyan)"
-        strokeWidth="1"
+    <li className="flex items-center gap-3 py-1.5">
+      <span
+        className="w-2.5 h-2.5 rounded-full shrink-0"
+        style={{
+          background: color,
+          boxShadow: `0 0 6px ${color}`,
+          animation: node.state !== "ok" ? "pulse-glow 1.4s ease-in-out infinite" : undefined,
+        }}
       />
-      <circle
-        cx={px + 14}
-        cy={py - 8}
-        r="3.5"
-        fill={color}
-        style={pulse ? { animation: "pulse-glow 1.2s ease-in-out infinite" } : undefined}
-      />
-      <text x={px} y={py + 26} textAnchor="middle" fontSize="9" className="fill-text-primary">
-        {node.label}
-      </text>
-    </g>
+      <div className="min-w-0 w-40 shrink-0">
+        <div className="truncate">{node.label}</div>
+        <div className="text-[10px] truncate" style={{ color }}>
+          {STATE_LABEL[node.state]}
+          {node.detail ? ` · ${node.detail}` : ""}
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0 flex items-end justify-end gap-[2px] h-5">
+        {padded.map((b, i) => (
+          <span
+            key={i}
+            className="w-[3px] rounded-sm"
+            style={{
+              height: b ? "100%" : "40%",
+              background: b ? STATE_COLOR[b] : "rgba(255,255,255,0.10)",
+            }}
+          />
+        ))}
+      </div>
+
+      <span className="tabular-nums text-text-muted w-14 text-right shrink-0">
+        {node.uptimePercent != null ? `${node.uptimePercent}%` : "—"}
+      </span>
+    </li>
   );
 }

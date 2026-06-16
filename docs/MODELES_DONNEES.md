@@ -66,17 +66,18 @@ Correspondance couleurs (front) : `new → bleu`, `in_progress → jaune`, `on_h
 
 ---
 
-## 3. Panneau 2 — Active IT Projects
+## 3. Panneau 2 — Projets SI
 
 ```ts
 type KeyStatus = "on_track" | "at_risk" | "critical";   // vert / jaune / rouge
 
 interface Project {
-  id: string;
-  name: string;
-  dueDate: string;       // ISO 8601 (date)
-  keyStatus: KeyStatus;
-  progress: number;      // 0–100 (%)
+  id: string;            // matricule (ex. "SI-PRO3")
+  name: string;          // intitulé
+  owner: string;         // responsable
+  dueDate: string | null; // ISO 8601 (date) — optionnel
+  keyStatus: KeyStatus;  // défaut "on_track"
+  progress: number;      // 0–100 (%) — défaut 0
   overdue: boolean;      // dueDate dépassée et non terminé
 }
 
@@ -96,10 +97,11 @@ interface ServiceNode {
   id: string;            // ex. "vpn"
   label: string;         // "VPN"
   state: ServiceState;   // vert / orange-warn / rouge / maintenance
-  // position sur la carte iso (gérée côté front, mais surchargée si fournie)
-  x?: number;
-  y?: number;
-  detail?: string;       // ex. "Scheduled Maint."
+  detail?: string;       // ex. "Maintenance planifiée"
+  latencyMs?: number;    // latence de la dernière sonde
+  uptimePercent?: number; // % de sondes 'ok' sur l'historique (maint exclue)
+  beats?: ServiceState[]; // heartbeats récents (barre type Uptime Kuma)
+  x?: number; y?: number; // (héritage carte iso, plus utilisé par l'UI liste)
 }
 
 interface ServiceLink {
@@ -109,8 +111,10 @@ interface ServiceLink {
 
 interface ServicesPanel extends PanelMeta {
   nodes: ServiceNode[];  // Fichiers, Messagerie, VPN, Web, Imprimantes, Office...
-  links: ServiceLink[];  // topologie pour la carte
-  summary: string[];     // lignes textuelles, ex. "VPN: ALERT [Orange] — Scheduled Maint."
+  links: ServiceLink[];  // topologie (héritage)
+  summary: string[];     // lignes textuelles des services non-ok
+  upCount?: number;      // services 'ok'
+  total?: number;        // total de services
 }
 ```
 

@@ -11,43 +11,33 @@ const DOT: Record<KeyStatus, string> = {
 export function ProjectsPanel() {
   const panel = useDashboard((s) => s.state?.projects);
   return (
-    <Panel
-      title="ACTIVE IT PROJECTS"
-      subtitle="PRIORITY & PROGRESS"
-      stale={panel?.stale}
-    >
+    <Panel title="PROJETS SI" subtitle="PORTEFEUILLE" stale={panel?.stale}>
       {!panel ? (
         <div className="text-text-muted text-xs">Chargement…</div>
       ) : (
-        <ul className="text-xs space-y-2">
+        <ul className="text-xs h-full overflow-auto divide-y divide-white/5 pr-1">
           {panel.projects.map((p) => (
-            <li key={p.id} className="flex items-center gap-3">
+            <li key={p.id} className="flex items-center gap-3 py-1.5">
               <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
+                className="w-2 h-2 rounded-full shrink-0"
                 style={{ background: DOT[p.keyStatus], boxShadow: `0 0 6px ${DOT[p.keyStatus]}` }}
               />
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between">
-                  <span className="truncate">{p.name}</span>
-                  <span
-                    className="ml-2 whitespace-nowrap"
-                    style={{ color: p.overdue ? "var(--status-alert)" : "var(--text-muted)" }}
-                  >
-                    {p.dueDate}
-                  </span>
-                </div>
-                <div className="mt-1 h-1.5 rounded bg-white/10 overflow-hidden">
-                  <div
-                    className="h-full rounded"
-                    style={{
-                      width: `${p.progress}%`,
-                      background: "var(--neon-cyan)",
-                      boxShadow: "0 0 8px var(--neon-cyan)",
-                    }}
-                  />
-                </div>
-              </div>
-              <span className="w-8 text-right tabular-nums">{p.progress}%</span>
+              <span
+                className="font-display tracking-wider shrink-0 w-20 truncate"
+                style={{ color: "var(--neon-cyan)" }}
+                title={p.id}
+              >
+                {p.id}
+              </span>
+              <span className="flex-1 min-w-0 truncate" title={p.name}>
+                {p.name}
+              </span>
+              {p.progress > 0 && (
+                <span className="tabular-nums text-text-muted w-9 text-right">{p.progress}%</span>
+              )}
+              <span className="text-text-muted shrink-0 w-24 text-right truncate" title={p.owner}>
+                {p.owner}
+              </span>
             </li>
           ))}
         </ul>

@@ -12,19 +12,28 @@ interface PanelProps {
 export function Panel({ title, subtitle, stale, children, className }: PanelProps) {
   return (
     <section
-      className={`neon-border rounded-md p-3 flex flex-col min-h-0 ${className ?? ""}`}
-      style={{ background: "var(--bg-panel)", opacity: stale ? 0.5 : 1 }}
+      className={`neon-border rounded-md flex flex-col min-h-0 ${className ?? ""}`}
+      style={{
+        background: "var(--bg-panel)",
+        opacity: stale ? 0.55 : 1,
+        boxShadow: "0 0 0 1px rgba(0,0,0,0.4), inset 0 0 24px rgba(0,0,0,0.35)",
+      }}
     >
-      <div className="flex items-baseline justify-between mb-2 shrink-0">
-        <h2 className="font-display text-sm tracking-[0.25em] neon-text">{title}</h2>
-        {subtitle && (
-          <span className="text-[10px] tracking-widest text-text-muted">{subtitle}</span>
-        )}
-        {stale && (
-          <span className="text-[10px] tracking-widest text-status-warn">DATA STALE</span>
-        )}
+      <div
+        className="flex items-baseline justify-between gap-2 px-3 py-2 shrink-0 border-b"
+        style={{ borderColor: "var(--neon-cyan-dim, rgba(64,224,255,0.25))" }}
+      >
+        <h2 className="font-display text-sm tracking-[0.22em] neon-text truncate">{title}</h2>
+        <div className="flex items-center gap-2 shrink-0">
+          {subtitle && (
+            <span className="text-[10px] tracking-widest text-text-muted">{subtitle}</span>
+          )}
+          {stale && (
+            <span className="text-[10px] tracking-widest text-status-warn">DONNÉES OBSOLÈTES</span>
+          )}
+        </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+      <div className="flex-1 min-h-0 overflow-hidden p-3">{children}</div>
     </section>
   );
 }

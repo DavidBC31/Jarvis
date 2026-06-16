@@ -10,29 +10,35 @@ const STATUS_COLOR: Record<TicketStatus, string> = {
   closed: "var(--text-muted)",
 };
 const STATUS_LABEL: Record<TicketStatus, string> = {
-  new: "New",
-  in_progress: "In Progress",
-  on_hold: "On Hold",
-  resolved: "Resolved",
-  closed: "Closed",
+  new: "Nouveau",
+  in_progress: "En cours",
+  on_hold: "En attente",
+  resolved: "Résolu",
+  closed: "Clôturé",
+};
+const PRIORITY_LABEL: Record<string, string> = {
+  low: "Basse",
+  medium: "Moyenne",
+  high: "Haute",
+  urgent: "Urgente",
 };
 
 export function TicketsPanel() {
   const panel = useDashboard((s) => s.state?.tickets);
   return (
-    <Panel title="EVERPING SUPPORT TICKETS" subtitle="LIVE FEED" stale={panel?.stale}>
+    <Panel title="TICKETS DE SUPPORT" subtitle="FLUX EVERPING" stale={panel?.stale}>
       {!panel ? (
         <Loading />
       ) : (
         <div className="flex gap-3 h-full">
-          <table className="flex-1 text-xs border-collapse">
+          <table className="flex-1 text-xs border-collapse self-start">
             <thead className="text-text-muted text-left">
               <tr>
-                <th className="py-1 pr-2">ID</th>
-                <th className="py-1 pr-2">Subject</th>
-                <th className="py-1 pr-2">Status</th>
-                <th className="py-1 pr-2">Assigned</th>
-                <th className="py-1">Prio</th>
+                <th className="py-1 pr-2 font-normal">Réf.</th>
+                <th className="py-1 pr-2 font-normal">Sujet</th>
+                <th className="py-1 pr-2 font-normal">Statut</th>
+                <th className="py-1 pr-2 font-normal">Assigné</th>
+                <th className="py-1 font-normal">Prio.</th>
               </tr>
             </thead>
             <tbody>
@@ -53,7 +59,7 @@ export function TicketsPanel() {
                     </span>
                   </td>
                   <td className="py-1 pr-2 whitespace-nowrap">{t.assignedTo ?? "—"}</td>
-                  <td className="py-1 uppercase">{t.priority}</td>
+                  <td className="py-1">{PRIORITY_LABEL[t.priority] ?? t.priority}</td>
                 </tr>
               ))}
             </tbody>

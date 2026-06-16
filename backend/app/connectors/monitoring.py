@@ -18,16 +18,21 @@ import json
 import time
 import urllib.error
 import urllib.request
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_FILE = Path(__file__).resolve().parents[2] / "data" / "monitoring.json"
 DEFAULT_INTERVAL_S = 15.0
 VALID_STATES = {"ok", "warn", "alert", "maint"}
-_STATE_LABELS = {"maint": "MAINT [Orange]", "alert": "ALERT [Red]", "warn": "WARN [Yellow]"}
+_STATE_LABELS = {"maint": "Maintenance", "alert": "Hors ligne", "warn": "Dégradé"}
+# Nombre de heartbeats conservés par service (barre d'historique type Uptime Kuma).
+_HISTORY = 30
 
 _last_mtime: float | None = None
 _last_good_panel: dict | None = None
+# Historique des sondes par nœud : id -> deque[state].
+_history: dict[str, deque] = {}
 
 
 def _now_iso() -> str:
@@ -184,6 +189,17 @@ def _node_view(cfg_node: dict, state: str, detail: str | None, ms: float | None)
     return node
 
 
+def _record_beat(node_id: str, state: str) -> tuple[list[str], float]:
+    """Ajoute un heartbeat à l'historique et renvoie (beats, uptimePercent)."""
+    hist = _history.setdefault(node_id, deque(maxlen=_HISTORY))
+    hist.append(state)
+    beats = list(hist)
+    # Uptime : part de sondes 'ok' (la maintenance est exclue du dénominateur).
+    considered = [b for b in beats if b != "maint"]
+    pct = 100.0 if not considered else round(100 * considered.count("ok") / len(considered), 1)
+    return beats, pct
+
+
 async def check_all() -> dict:
     """Sonde tous les nœuds (en parallèle) et construit le panneau. En cas de
     config illisible, conserve le dernier panneau valide et marque ``stale``."""
@@ -195,13 +211,22 @@ async def check_all() -> dict:
         return {**base, "updatedAt": _now_iso(), "stale": True, "sourceError": str(e)}
 
     results = await asyncio.gather(*(_probe(n) for n in cfg["nodes"]))
-    nodes = [_node_view(n, *r) for n, r in zip(cfg["nodes"], results)]
+    nodes = []
+    for cfg_node, r in zip(cfg["nodes"], results):
+        node = _node_view(cfg_node, *r)
+        beats, pct = _record_beat(node["id"], node["state"])
+        node["beats"] = beats
+        node["uptimePercent"] = pct
+        nodes.append(node)
+    up = sum(1 for n in nodes if n["state"] == "ok")
     panel = {
         "updatedAt": _now_iso(),
         "stale": False,
         "nodes": nodes,
         "links": cfg["links"],
         "summary": _summary(nodes),
+        "upCount": up,
+        "total": len(nodes),
     }
     _last_good_panel = panel
     return panel
@@ -219,10 +244,14 @@ def seed_panel() -> dict:
     for n in cfg["nodes"]:
         check = n.get("check", {})
         state = check.get("state", "ok") if check.get("type") == "manual" else "ok"
-        nodes.append(_node_view(n, state, n.get("detail"), None))
+        node = _node_view(n, state, n.get("detail"), None)
+        node["beats"] = []
+        node["uptimePercent"] = 100.0
+        nodes.append(node)
     return {
-        "updatedAt": _now_iso(), "stale": False,
-        "nodes": nodes, "links": cfg["links"], "summary": _summary(nodes),
+        "updatedAt": _now_iso(), "stale": False, "nodes": nodes, "links": cfg["links"],
+        "summary": _summary(nodes), "upCount": sum(1 for n in nodes if n["state"] == "ok"),
+        "total": len(nodes),
     }
 
 

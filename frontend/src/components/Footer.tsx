@@ -29,8 +29,8 @@ export function Footer() {
           style={{ background: healthy ? "var(--status-ok)" : "var(--status-alert)" }}
         />
         <span className="font-display tracking-widest truncate">
-          BLEU CITRON IT SYSTEMS: {gs?.label ?? "…"}
-          {gs && ` [${gs.uptimePercent}% UPTIME]`}
+          SYSTÈMES IT BLEU CITRON : {gs?.label ?? "…"}
+          {gs && ` [${gs.uptimePercent}% DISPO]`}
         </span>
       </div>
 

@@ -36,7 +36,8 @@ export type KeyStatus = "on_track" | "at_risk" | "critical";
 export interface Project {
   id: string;
   name: string;
-  dueDate: string;
+  owner: string;
+  dueDate: string | null;
   keyStatus: KeyStatus;
   progress: number;
   overdue: boolean;
@@ -56,6 +57,8 @@ export interface ServiceNode {
   y?: number;
   detail?: string;
   latencyMs?: number;
+  uptimePercent?: number;
+  beats?: ServiceState[];
 }
 
 export interface ServiceLink {
@@ -67,6 +70,8 @@ export interface ServicesPanel extends PanelMeta {
   nodes: ServiceNode[];
   links: ServiceLink[];
   summary: string[];
+  upCount?: number;
+  total?: number;
 }
 
 export interface ActivityEvent {

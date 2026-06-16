@@ -28,11 +28,11 @@ export function App() {
   }
 
   return (
-    <div className="h-full w-full p-3 flex flex-col gap-3">
+    <div className="h-full w-full p-4 flex flex-col gap-4">
       <Header />
 
       {/* Grille modulaire 16:9 : 2 colonnes, 2 rangées de panneaux. */}
-      <main className="flex-1 min-h-0 grid grid-cols-2 grid-rows-2 gap-3">
+      <main className="flex-1 min-h-0 grid grid-cols-2 grid-rows-2 gap-4">
         <TicketsPanel />
         <ServicesPanel />
         <ProjectsPanel />

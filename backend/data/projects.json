@@ -1,8 +1,17 @@
 {
   "projects": [
-    { "id": "PRJ-01", "name": "Refonte intranet", "dueDate": "2026-07-15", "keyStatus": "on_track", "progress": 65 },
-    { "id": "PRJ-02", "name": "Déploiement SSO", "dueDate": "2026-06-30", "keyStatus": "at_risk", "progress": 40 },
-    { "id": "PRJ-03", "name": "Sauvegarde hors-site", "dueDate": "2026-06-20", "keyStatus": "critical", "progress": 90 },
-    { "id": "PRJ-04", "name": "Renouvellement parc PC", "dueDate": "2026-09-01", "keyStatus": "on_track", "progress": 25 }
+    { "id": "SI-PRO3", "name": "Optimisation des onglets invitations et accréditations - Billetron", "owner": "David Vacher" },
+    { "id": "SI-PRO3.2", "name": "Formulaire invitations / Outil de Gestion des Demandes d'Invitations Internes", "owner": "David Vacher" },
+    { "id": "SI-PRO4", "name": "Intégration LockSelf pour la sécurité et les mots de passe", "owner": "David Vacher" },
+    { "id": "SI-PRO6", "name": "API Billetron / Lucca", "owner": "David Vacher" },
+    { "id": "SI-PRO7", "name": "Double Synthèse comptable (Tournée / Filiales) sur Billetron", "owner": "David Vacher" },
+    { "id": "SI-PRO8", "name": "Absences Lucca / Lien API Lucca / GHS", "owner": "David Vacher" },
+    { "id": "SI-PRO11", "name": "Automatisation SIBIL (Ministère de la Culture)", "owner": "David Vacher" },
+    { "id": "SI-PRO12", "name": "Automatisation des relances de pointage", "owner": "David Vacher" },
+    { "id": "SI-PRO13", "name": "Process invitations partenaires", "owner": "David Vacher" },
+    { "id": "SI-PRO14", "name": "Téléphonie Fixe (Standard et stratégie d'appels)", "owner": "David Vacher" },
+    { "id": "SI-PRO15", "name": "Billetron - Le Tube", "owner": "David Vacher" },
+    { "id": "SI-PRO16", "name": "Automatisation des payes (justificatifs transport, téléphone)", "owner": "David Vacher" },
+    { "id": "SI-PRO18", "name": "DataView Booking", "owner": "David Vacher" }
   ]
 }
