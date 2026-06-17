@@ -34,6 +34,9 @@ SAMPLE_FILE = Path(__file__).resolve().parents[2] / "data" / "everping_sample.js
 DEFAULT_GRAPHQL_URL = "https://nest-backend-prod-yhodaefzgq-od.a.run.app/graphql"
 DEFAULT_CLIENT_ID = "ecd0193d-58da-429c-b61a-e6c849e8ed4d"
 DEFAULT_API_KEY = "AIzaSyAd5N8EHPXsz5fvVxSScxvoelFcwo2GwzQ"  # clé web Firebase (publique)
+# Origine de la plateforme : requise car la clé API Firebase est restreinte par
+# référent HTTP (sinon 403 API_KEY_HTTP_REFERRER_BLOCKED).
+DEFAULT_ORIGIN = "https://appv2.everping.eu"
 SECURETOKEN_URL = "https://securetoken.googleapis.com/v1/token"
 
 # Requête exacte utilisée par le client web (sous-ensemble suffisant au dashboard).
@@ -86,6 +89,10 @@ def _api_key() -> str:
     return os.getenv("EVERPING_API_KEY", DEFAULT_API_KEY)
 
 
+def _origin() -> str:
+    return os.getenv("EVERPING_ORIGIN", DEFAULT_ORIGIN)
+
+
 def _refresh_id_token(refresh_token: str) -> tuple[str, float]:
     """Échange un refresh token contre un ID token frais. Renvoie (token, exp_epoch)."""
     data = urllib.parse.urlencode(
@@ -94,7 +101,12 @@ def _refresh_id_token(refresh_token: str) -> tuple[str, float]:
     req = urllib.request.Request(
         f"{SECURETOKEN_URL}?key={_api_key()}",
         data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            # Clé API restreinte par référent → indispensable.
+            "Referer": f"{_origin()}/",
+            "Origin": _origin(),
+        },
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=10) as resp:
@@ -152,6 +164,8 @@ def fetch_tickets_raw(page_size: int = 30) -> list[dict]:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {token}",
             "application": "platform",
+            "Origin": _origin(),
+            "Referer": f"{_origin()}/",
         },
         method="POST",
     )
