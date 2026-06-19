@@ -35,14 +35,35 @@ export interface VoiceApi {
   sttSupported: boolean;
   ttsSupported: boolean;
   listening: boolean;
+  error: string | null; // message lisible du dernier échec (diagnostic UI)
   startListening: (onResult: (transcript: string) => void) => void;
   stopListening: () => void;
   speak: (text: string) => void;
   cancelSpeak: () => void;
 }
 
+// Traduit le code d'erreur brut de la Web Speech API en message exploitable.
+function errorMessage(code: string): string | null {
+  switch (code) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "Accès micro refusé. Clique sur le 🔒 dans la barre d'adresse → Micro → Autoriser, puis recharge.";
+    case "audio-capture":
+      return "Aucun micro détecté par le navigateur.";
+    case "network":
+      return "Service de reconnaissance Google injoignable (réseau/pare-feu).";
+    case "no-speech":
+      return "Rien entendu — parle juste après le clic.";
+    case "aborted":
+      return null; // interruption normale (stop manuel, autre reco) : pas une erreur à afficher
+    default:
+      return `Erreur reconnaissance : ${code}`;
+  }
+}
+
 export function useVoice(lang = "fr-FR"): VoiceApi {
   const [listening, setListening] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
   const sttSupported = typeof window !== "undefined" && getRecognitionCtor() !== null;
@@ -56,6 +77,8 @@ export function useVoice(lang = "fr-FR"): VoiceApi {
     (onResult: (transcript: string) => void) => {
       const Ctor = getRecognitionCtor();
       if (!Ctor) return;
+      // Coupe une éventuelle reconnaissance précédente (Chrome n'en autorise qu'une).
+      recognitionRef.current?.abort?.();
       const rec = new Ctor();
       rec.lang = lang;
       rec.continuous = false;
@@ -64,11 +87,27 @@ export function useVoice(lang = "fr-FR"): VoiceApi {
         const transcript = e.results[0]?.[0]?.transcript ?? "";
         if (transcript) onResult(transcript.trim());
       };
-      rec.onerror = () => setListening(false);
+      rec.onerror = (e) => {
+        const code = (e && e.error) || "unknown";
+        // eslint-disable-next-line no-console
+        console.warn("[voice] erreur reconnaissance:", code);
+        const msg = errorMessage(code);
+        if (msg) setError(msg);
+        setListening(false);
+      };
       rec.onend = () => setListening(false);
       recognitionRef.current = rec;
+      setError(null);
       setListening(true);
-      rec.start();
+      try {
+        rec.start();
+      } catch (e) {
+        // InvalidStateError si une reco est déjà active : on le rend visible.
+        setError("Le micro est déjà en cours d'initialisation — réessaie dans 1 s.");
+        setListening(false);
+        // eslint-disable-next-line no-console
+        console.warn("[voice] start() a échoué:", e);
+      }
     },
     [lang],
   );
@@ -98,5 +137,5 @@ export function useVoice(lang = "fr-FR"): VoiceApi {
     if (ttsSupported) window.speechSynthesis.cancel();
   }, [ttsSupported]);
 
-  return { sttSupported, ttsSupported, listening, startListening, stopListening, speak, cancelSpeak };
+  return { sttSupported, ttsSupported, listening, error, startListening, stopListening, speak, cancelSpeak };
 }

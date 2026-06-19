@@ -138,6 +138,11 @@ export function JarvisPanel() {
               </span>
             </div>
 
+            {/* Erreur micro (manuel) — rend visible la cause d'un échec. */}
+            {voice.error && (
+              <div className="text-[10px] leading-tight text-status-alert">⚠ {voice.error}</div>
+            )}
+
             {/* Retour visuel du mot-clé « Hey Jarvis » */}
             {wake && (
               <div className="text-[10px] leading-tight">
