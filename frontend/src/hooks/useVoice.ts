@@ -17,7 +17,7 @@ type SpeechRecognitionLike = {
         results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
       }) => void)
     | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
   onend: (() => void) | null;
 };
 export type { SpeechRecognitionLike };

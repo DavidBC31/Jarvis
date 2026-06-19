@@ -27,7 +27,7 @@ export function JarvisPanel() {
 
   // Mot-clé « Hey Jarvis » : écoute continue, en pause pendant que Jarvis
   // parle/réfléchit ou pendant une saisie micro (évite l'auto-déclenchement).
-  useWakeWord({
+  const wakeState = useWakeWord({
     enabled: wake,
     paused: busy || voice.listening,
     onCommand: (q) => {
@@ -129,6 +129,24 @@ export function JarvisPanel() {
                 {PHASE_LABEL[phase]}
               </span>
             </div>
+
+            {/* Retour visuel du mot-clé « Hey Jarvis » */}
+            {wake && (
+              <div className="text-[10px] leading-tight">
+                {wakeState.error ? (
+                  <span className="text-status-alert">⚠ {wakeState.error}</span>
+                ) : wakeState.armed ? (
+                  <span style={{ color: "var(--neon-cyan)" }}>🟢 Je t'écoute — pose ta question…</span>
+                ) : wakeState.active ? (
+                  <span className="text-text-muted">
+                    🎙️ À l'écoute de « Hey Jarvis »…
+                    {wakeState.lastHeard ? ` (entendu : « ${wakeState.lastHeard} »)` : ""}
+                  </span>
+                ) : (
+                  <span className="text-text-muted">Initialisation du micro…</span>
+                )}
+              </div>
+            )}
 
             <form
               onSubmit={(e) => {
